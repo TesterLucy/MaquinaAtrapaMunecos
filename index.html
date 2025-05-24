@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Máquina Caza Muñecos</title>
+  <link rel="stylesheet" href="Capa_Presentacion/styles.css" />
+</head>
+
+<body>
+  <h1>Máquina Caza Muñecos</h1>
+
+  <!-- GRID 2×2 -->
+  <div class="grid-container">
+    <div class="area" data-index="0"><img /><span class="area-state"></span></div>
+    <div class="area" data-index="1"><img /><span class="area-state"></span></div>
+    <div class="area" data-index="2"><img /><span class="area-state"></span></div>
+    <div class="area" data-index="3"><img /><span class="area-state"></span></div>
+  </div>
+
+  <!-- CONTROLES -->
+  <div id="controles">
+    <button id="btn-insertar-coin" class="btn-rounded">💰 Insertar Moneda</button>
+    <button id="btn-recargar" class="btn">🔄 Recargar Muñecos</button>
+    <div id="panel-estado-botones">
+      Estado: <span id="estado-maquina">IDLE</span> |
+      Intentos: <span id="intentos">0</span>
+    </div>
+    <div class="nav-buttons">
+      <button id="btn-izq">←</button>
+      <button id="btn-arriba">↑</button>
+      <button id="btn-abajo">↓</button>
+      <button id="btn-der">→</button>
+      <button id="btn-bajar">Bajar Garra</button>
+    </div>
+  </div>
+  <!-- SCRIPTS: primero datos, luego lógica -->
+  <script src="Capa_Datos/gameConfig.js"></script>
+  <script src="Capa_Logica/gameLogic.js"></script>
+</body>
+
+</html>

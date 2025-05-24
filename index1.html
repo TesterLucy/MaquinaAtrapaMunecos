@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Máquina Caza Muñecos</title>
+  <style>
+    /* ===== Reset y base ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f0f0; }
+    h1 { text-align: center; margin: 16px 0; }
+
+    /* ===== Contenedor principal ===== */
+    .game-container { max-width: 800px; margin: 0 auto; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+    /* ===== Panel de información ===== */
+    .info-panel { display: flex; justify-content: space-around; margin-bottom: 12px; }
+    .info-panel div { padding: 8px 12px; background: #eee; border-radius: 4px; }
+
+    /* ===== Zona de juego ===== */
+    .play-area { position: relative; width: 100%; height: 400px; background: #cce7ff; overflow: hidden; }
+    /* Columnas de muñecos */
+    .column { position: absolute; top: 0; bottom: 0; width: 20%; }
+    .col-1 { left: 10%; }
+    .col-2 { left: 30%; }
+    .col-3 { left: 50%; }
+    .col-4 { left: 70%; }
+
+    .column img { display: block; margin: auto; max-height: 200px; transition: opacity 0.3s; }
+    .column.sin_muñeco img { opacity: 0.2; }
+
+    /* Pinza */
+    .claw { position: absolute; top: -50px; left: 50%; width: 60px; height: 50px; margin-left: -30px; background: #888; border: 4px solid #555; border-bottom: none; border-radius: 4px 4px 0 0; transition: left 0.3s, top 0.3s; }
+
+    /* Área de salida */
+    .exit-area { margin-top: 8px; padding: 8px; background: #ddd; border-radius: 4px; height: 60px; display: flex; align-items: center; justify-content: left; gap: 8px; overflow-x: auto; }
+    .exit-area img { width: 50px; height: 50px; }
+
+    /* Botones de control */
+    .controls { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+    button { padding: 8px 12px; font-size: 16px; border: none; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+    button:active { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Máquina Caza Muñecos</h1>
+    <div class="info-panel">
+      <div id="estado-maquina">Estado: esperando_moneda</div>
+      <div id="intentos">Intentos: 0</div>
+      <div id="ganados">Ganados: 0</div>
+    </div>
+    <div class="play-area" id="play-area">
+      <!-- Cuatro columnas de muñecos -->
+      <div class="column col-1" data-area="0"><img src="" alt="Muñeco"></div>
+      <div class="column col-2" data-area="1"><img src="" alt="Muñeco"></div>
+      <div class="column col-3" data-area="2"><img src="" alt="Muñeco"></div>
+      <div class="column col-4" data-area="3"><img src="" alt="Muñeco"></div>
+      <!-- Pinza -->
+      <div class="claw" id="claw"></div>
+    </div>
+    <!-- Área de salida -->
+    <div class="exit-area" id="exit-area"></div>
+
+    <!-- Controles virtuales -->
+    <div class="controls">
+      <button id="btn-left">←</button>
+      <button id="btn-drop">↓</button>
+      <button id="btn-right">→</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== Variables y datos =====
+    const NUM_AREAS = 4;
+    const MAX_INTENTOS = 3;
+    const IMG_PATH = 'img/muneco'; // muneco1.png...muneco12.png
+    const NUM_MUNECO = 12;
+
+    // Estado global
+    let estadoMaquina = 'esperando_moneda';
+    let intentos = 0;
+    let ganados = 0;
+    let posicion = 0; // índice del área seleccionada (0..3)
+    // Estados de cada área
+    const areas = Array(NUM_AREAS).fill().map(() => ({ estado: 'sin_muñeco', img: '' }));
+
+    // ===== Elementos del DOM =====
+    const estadoEl = document.getElementById('estado-maquina');
+    const intentosEl = document.getElementById('intentos');
+    const ganadosEl = document.getElementById('ganados');
+    const clawEl = document.getElementById('claw');
+    const cols = document.querySelectorAll('.column');
+    const exitArea = document.getElementById('exit-area');
+
+    // ===== Funciones auxiliares =====
+    function actualizarDOM() {
+      // Info\ n      estadoEl.textContent = 'Estado: ' + estadoMaquina;
+      intentosEl.textContent = 'Intentos: ' + intentos;
+      ganadosEl.textContent = 'Ganados: ' + ganados;
+      // Columnas
+      cols.forEach(col => {
+        const idx = +col.dataset.area;
+        col.className = 'column col-' + (idx+1) + ' ' + areas[idx].estado;
+        col.querySelector('img').src = areas[idx].img || '';
+      });
+      // Posición de la pinza
+      const target = cols[posicion];
+      const x = target.offsetLeft + target.clientWidth/2 - clawEl.clientWidth/2;
+      clawEl.style.left = x + 'px';
+    }
+
+    function recargarAreas() {
+      areas.forEach(a => {
+        const rand = Math.random();
+        if (rand < 0.5) {
+          a.estado = 'con_muñeco';
+          const n = Math.floor(Math.random() * NUM_MUNECO) + 1;
+          a.img = IMG_PATH + n + '.png';
+        } else {
+          a.estado = 'sin_muñeco';
+          a.img = '';
+        }
+      });
+    }
+
+    function initJuego() {
+      intentos = 0;
+      ganados = 0;
+      estadoMaquina = 'esperando_moneda';
+      recargarAreas();
+      posicion = 0;
+      actualizarDOM();
+    }
+
+    // ===== Lógica de la FSM =====
+    document.addEventListener('keydown', e => {
+      if (estadoMaquina !== 'esperando_movimiento') return;
+      if (e.key === 'ArrowLeft') moverIzq();
+      if (e.key === 'ArrowRight') moverDer();
+      if (e.key === ' ' || e.key === 'ArrowDown') bajarPinza();
+    });
+
+    document.getElementById('btn-left').onclick = moverIzq;
+    document.getElementById('btn-right').onclick = moverDer;
+    document.getElementById('btn-drop').onclick = bajarPinza;
+
+    function moverIzq() {
+      if (posicion > 0) {
+        posicion--;
+        actualizarDOM();
+      }
+    }
+    function moverDer() {
+      if (posicion < NUM_AREAS-1) {
+        posicion++;
+        actualizarDOM();
+      }
+    }
+
+    function bajarPinza() {
+      if (intentos <= 0) return;
+      estadoMaquina = 'bajando_pinza';
+      actualizarDOM();
+      // Simular tiempo de bajada
+      setTimeout(() => intentarCaptura(), 500);
+    }
+
+    function intentarCaptura() {
+      estadoMaquina = 'intentando_captura';
+      actualizarDOM();
+      const area = areas[posicion];
+      // Si no hay muñeco, falla
+      if (area.estado !== 'con_muñeco') {
+        fallo();
+        return;
+      }
+      // Lógica sencilla: 50% de probabilidad de caer en la franja central
+      if (Math.random() < 0.5) exito();
+      else fallo();
+    }
+
+    function exito() {
+      estadoMaquina = 'moviendo_a_salida';
+      actualizarDOM();
+      const area = areas[posicion];
+      area.estado = 'recogida';
+      actualizarDOM();
+      setTimeout(() => {
+        // Mover imagen al área de salida
+        const img = document.createElement('img');
+        img.src = area.img;
+        exitArea.appendChild(img);
+        area.estado = 'sin_muñeco';
+        area.img = '';
+        ganados++;
+        finIntento();
+      }, 500);
+    }
+
+    function fallo() {
+      estadoMaquina = 'fin_intento';
+      actualizarDOM();
+      setTimeout(finIntento, 500);
+    }
+
+    function finIntento() {
+      intentos--;
+      if (intentos > 0) {
+        estadoMaquina = 'esperando_movimiento';
+      } else {
+        estadoMaquina = 'esperando_moneda';
+      }
+      actualizarDOM();
+    }
+
+    // ===== Control de moneda =====
+    document.body.insertAdjacentHTML('beforeend', '<button id="insert-coin" style="position:fixed;bottom:20px;right:20px;">Insertar moneda</button>');
+    document.getElementById('insert-coin').onclick = () => {
+      if (estadoMaquina !== 'esperando_moneda') return;
+      intentos = MAX_INTENTOS;
+      estadoMaquina = 'esperando_movimiento';
+      recargarAreas();
+      actualizarDOM();
+    };
+
+    // Iniciar juego
+    initJuego();
+  </script>
+</body>
+</html>
