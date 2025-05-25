@@ -13,10 +13,14 @@ const STATES = {
 };
 
 // Inicializo 4 áreas vacías
-const areas = Array.from({ length: NUM_AREAS }, () => ({
-  state: STATES.EMPTY,
-  doll:  null    // ruta de la imagen del muñeco o null
+const areas = Array.from({ length: NUM_AREAS }, (_, i) => ({
+  state: i < 4 ? STATES.EMPTY : 'salida',
+  doll: null
 }));
+
+let muñecoEnGarra = null;         // ID del muñeco atrapado
+let celdaOriginal = null;         // Índice de donde fue atrapado
+let ganados = 0;
 
 // Umbral de captura en px
 const CAPTURE_THRESHOLD = 20;

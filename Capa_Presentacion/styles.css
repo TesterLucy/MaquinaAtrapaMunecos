@@ -12,20 +12,42 @@ h1 {
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(2, 200px);
-  grid-template-rows: repeat(2, 200px);
+  grid-template-columns: 200px 200px 200px; /* 1 columna para salida, 2 para el 2x2 */
+  grid-template-rows: 200px 200px;
   gap: 10px;
   margin-bottom: 30px;
 }
 
+/* Para que cada celda se vea igual */
 .area {
   width: 200px;
   height: 200px;
   border: 1px solid #333;
   position: relative;
   background: #fafafa;
-  cursor: pointer;
   overflow: hidden;
+}
+
+/* Reubicar cada celda en su sitio */
+.area[data-index="4"] {
+  grid-row: 1 / span 2; /* Ocupa dos filas */
+  grid-column: 1;
+}
+.area[data-index="0"] {
+  grid-row: 1;
+  grid-column: 2;
+}
+.area[data-index="1"] {
+  grid-row: 1;
+  grid-column: 3;
+}
+.area[data-index="2"] {
+  grid-row: 2;
+  grid-column: 2;
+}
+.area[data-index="3"] {
+  grid-row: 2;
+  grid-column: 3;
 }
 
 .area img {
@@ -49,12 +71,21 @@ h1 {
 /* Indicador de garra dentro del área */
 .garra-indicator {
   position: absolute;
-  width: 24px;
-  height: 24px;
-  border: 3px solid red;
-  border-radius: 50%;
-  transition: top 0.1s, left 0.1s;
+  width: 50px;
+  height: 50px;
   pointer-events: none;
+  transition: top 0.1s, left 0.1s;
+}
+.garra-indicator img {
+  width: 100%;
+  height: 100%;
+}
+.garra-indicator img.muneco {
+  position: absolute;
+  top: -40px;
+  left: -10px;
+  width: 40px;
+  height: 40px;
 }
 
 /* CONTROLES */
