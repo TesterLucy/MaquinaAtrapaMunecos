@@ -107,7 +107,6 @@ function moverCelda(dir) {
   }
 }
 
-
 function abrirGarra() {
   if (estadoMaquina !== 'GRABBING') return;
 
@@ -122,6 +121,7 @@ function abrirGarra() {
       celdaOriginal = null;
       ganados++;
     } else {
+      // Falló la entrega, devolver muñeco
       areas[celdaOriginal].state = STATES.HAS_DOLL;
       areas[celdaOriginal].doll = muñecoEnGarra;
       muñecoEnGarra = null;
@@ -129,8 +129,10 @@ function abrirGarra() {
     }
   }
 
+  // ❗ Aquí siempre se descuenta el intento, acierte o no
   intentosRestantes--;
   estadoMaquina = intentosRestantes > 0 ? 'COIN_INSERTED' : 'IDLE';
+
   updatePanel();
   renderAreas();
 }
@@ -151,6 +153,7 @@ function intentarCaptura() {
   const dx = Math.abs(garraX - center);
   const dy = Math.abs(garraY - center);
 
+  // Verifica si atrapa el muñeco
   if (area.state === STATES.HAS_DOLL && dx < CAPTURE_TH && dy < CAPTURE_TH && muñecoEnGarra === null) {
     muñecoEnGarra = area.doll;
     celdaOriginal = selectedIndex;
@@ -158,10 +161,12 @@ function intentarCaptura() {
     area.doll = null;
   }
 
+  // En cualquier caso, pasa al estado GRABBING
   estadoMaquina = 'GRABBING';
   updatePanel();
   renderAreas();
 }
+
 
 function checkEntrega() {
   if (selectedIndex === 4 && muñecoEnGarra !== null) {
