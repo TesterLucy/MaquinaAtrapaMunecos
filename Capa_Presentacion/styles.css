@@ -12,55 +12,35 @@ h1 {
 
 .grid-container {
   display: grid;
-  grid-template-columns: 200px 200px 200px; /* 1 columna para salida, 2 para el 2x2 */
+  grid-template-columns: 200px 200px 200px;
   grid-template-rows: 200px 200px;
   gap: 10px;
   margin-bottom: 30px;
 }
 
-/* Para que cada celda se vea igual */
 .area {
-  width: 200px;
-  height: 200px;
+  width: 200px; height: 200px;
   border: 1px solid #333;
   position: relative;
   background: #fafafa;
   overflow: hidden;
 }
 
-/* Reubicar cada celda en su sitio */
-.area[data-index="4"] {
-  grid-row: 1 / span 2; /* Ocupa dos filas */
-  grid-column: 1;
-}
-.area[data-index="0"] {
-  grid-row: 1;
-  grid-column: 2;
-}
-.area[data-index="1"] {
-  grid-row: 1;
-  grid-column: 3;
-}
-.area[data-index="2"] {
-  grid-row: 2;
-  grid-column: 2;
-}
-.area[data-index="3"] {
-  grid-row: 2;
-  grid-column: 3;
-}
+/* Posicionamiento de celdas */
+.area[data-index="4"] { grid-row: 1 / span 2; grid-column: 1; }
+.area[data-index="0"] { grid-row: 1; grid-column: 2; }
+.area[data-index="1"] { grid-row: 1; grid-column: 3; }
+.area[data-index="2"] { grid-row: 2; grid-column: 2; }
+.area[data-index="3"] { grid-row: 2; grid-column: 3; }
 
 .area img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 100%; height: 100%; object-fit: contain;
   pointer-events: none;
 }
 
 .area-state {
   position: absolute;
-  bottom: 4px;
-  left: 4px;
+  bottom: 4px; left: 4px;
   font-size: 1rem;
   background: rgba(0,0,0,0.6);
   color: #fff;
@@ -68,61 +48,39 @@ h1 {
   border-radius: 4px;
 }
 
-/* Indicador de garra dentro del área */
+/* Indicador de garra */
 .garra-indicator {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 50px; height: 50px;
   pointer-events: none;
   transition: top 0.1s, left 0.1s;
 }
 .garra-indicator img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
 }
-.garra-indicator img.muneco {
+.garra-indicator img.muñeco {
   position: absolute;
-  top: -40px;
-  left: -10px;
-  width: 40px;
-  height: 40px;
+  top: -40px; left: -10px;
+  width: 40px; height: 40px;
 }
 
 /* CONTROLES */
 #controles {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
 }
 
 .btn-rounded {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 25px;
-  background-color: #28a745;
-  color: white;
-  font-size: 1rem;
+  padding: 10px 20px; border: none; border-radius: 25px;
+  background-color: #28a745; color: white; font-size: 1rem;
   cursor: pointer;
 }
-
 .btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  font-size: 0.9rem;
+  padding: 8px 16px; border: none; border-radius: 4px;
+  background-color: #007bff; color: white; font-size: 0.9rem;
   cursor: pointer;
 }
-
-#panel-estado-botones {
-  font-weight: bold;
-}
-
+#panel-estado-botones { font-weight: bold; }
 .nav-buttons button {
-  margin: 0 5px;
-  padding: 8px 12px;
-  font-size: 1rem;
+  margin: 0 5px; padding: 8px 12px; font-size: 1rem;
   cursor: pointer;
 }

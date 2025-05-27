@@ -10,13 +10,12 @@
 <body>
   <h1>Máquina Caza Muñecos</h1>
 
-  <!-- GRID 2×2 + zona de salida -->
+  <!-- GRID 2×2 + zona de entrega a la izquierda -->
   <div class="grid-container">
-    <!-- Casilla de salida (entrega) → ocupa fila 1 y 2 en columna 1 -->
-    <div class="area salida" data-index="4"><img id="muñeco-entregado" /><span class="area-state">🎁 Entrega</span>
+    <div class="area salida" data-index="4">
+      <img id="muñeco-entregado" />
+      <span class="area-state">🎁 Entrega</span>
     </div>
-
-    <!-- Área principal 2x2 (muñecos) -->
     <div class="area" data-index="0"><img /><span class="area-state"></span></div>
     <div class="area" data-index="1"><img /><span class="area-state"></span></div>
     <div class="area" data-index="2"><img /><span class="area-state"></span></div>
@@ -28,7 +27,7 @@
     <button id="btn-insertar-coin" class="btn-rounded">💰 Insertar Moneda</button>
     <button id="btn-recargar" class="btn">🔄 Recargar Muñecos</button>
     <div id="panel-estado-botones">
-      Estado: <span id="estado-maquina">IDLE</span> |
+      Estado: <span id="estado-maquina"></span> |
       Intentos: <span id="intentos">0</span> |
       Ganados: <span id="ganados">0</span>
     </div>
@@ -38,7 +37,7 @@
       <button id="btn-abajo">↓</button>
       <button id="btn-der">→</button>
       <button id="btn-bajar">Bajar Garra</button>
-      <button id="btn-abrir">🔓 Abrir Garra</button> <!-- Nuevo -->
+      <button id="btn-abrir">🔓 Abrir Garra</button>
     </div>
   </div>
 

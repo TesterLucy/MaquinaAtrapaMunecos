@@ -1,10 +1,11 @@
-// === VARIABLES GLOBALES ===
+// Variables de estado
 let intentosRestantes = 0;
-let estadoMaquina = 'IDLE';
+let estadoMaquina = ESTADOS.INICIANDO;
 let selectedIndex = 0;
 let garraX = AREA_SIZE / 2 - STEP_SIZE / 2;
 let garraY = AREA_SIZE / 2 - STEP_SIZE / 2;
 
+// Mapa de movimiento entre casillas (layout irregular)
 const mapaMovimiento = {
   0: { izquierda: 4, derecha: 1, abajo: 2, arriba: null },
   1: { izquierda: 0, derecha: null, abajo: 3, arriba: null },
@@ -13,7 +14,7 @@ const mapaMovimiento = {
   4: { izquierda: null, derecha: 0, abajo: 2, arriba: 0 }
 };
 
-// === ACTUALIZACIÓN DE PANEL Y ÁREAS ===
+// ——— UI ———
 function updatePanel() {
   document.getElementById('estado-maquina').textContent = estadoMaquina;
   document.getElementById('intentos').textContent = intentosRestantes;
@@ -26,15 +27,15 @@ function renderAreas() {
     const img = cell.querySelector('img');
     const span = cell.querySelector('.area-state');
 
-    if (area.state === STATES.HAS_DOLL) {
+    // Mostrar muñecos en áreas 0–3
+    if (idx < 4 && area.state === STATES.HAS_DOLL) {
       img.src = `Capa_Datos/Assets/muneco${area.doll}.jpg`;
-    } else if (idx === 4 && muñecoEnGarra === null) {
-      img.src = '';
-    } else if (idx < 4) {
+    } else {
       img.src = '';
     }
 
-    if (idx !== 4) {
+    // Etiqueta en las áreas
+    if (idx < 4) {
       span.textContent = area.state === STATES.HAS_DOLL ? '🎁' : '';
     }
 
@@ -44,6 +45,7 @@ function renderAreas() {
   updateIndicator();
 }
 
+// Dibuja la imagen de la garra (y muñeco colgando)
 function updateIndicator() {
   document.querySelectorAll('.garra-indicator').forEach(el => el.remove());
   const cell = document.querySelector(`.area[data-index="${selectedIndex}"]`);
@@ -52,183 +54,209 @@ function updateIndicator() {
   div.style.left = `${garraX}px`;
   div.style.top = `${garraY}px`;
 
-  const img = document.createElement('img');
-  img.src = 'Capa_Datos/Assets/garra.png';
-  div.appendChild(img);
+  // Imagen de la garra
+  const garraImg = document.createElement('img');
+  garraImg.src = 'Capa_Datos/Assets/garra.png';
+  div.appendChild(garraImg);
 
+  // Si hay muñeco en la garra, lo colgamos
   if (muñecoEnGarra !== null) {
-    const muñeco = document.createElement('img');
-    muñeco.src = `Capa_Datos/Assets/muneco${muñecoEnGarra}.jpg`;
-    muñeco.classList.add('muñeco');
-    div.appendChild(muñeco);
+    const muñ = document.createElement('img');
+    muñ.src = `Capa_Datos/Assets/muneco${muñecoEnGarra}.jpg`;
+    muñ.classList.add('muñeco');
+    div.appendChild(muñ);
   }
 
   cell.appendChild(div);
 }
 
-// ==========================================
-// 1) Movimiento libre dentro de la casilla
-function move(dx, dy) {
-  const maxPos = AREA_SIZE - STEP_SIZE;
-  garraX = Math.max(0, Math.min(maxPos, garraX + dx));
-  garraY = Math.max(0, Math.min(maxPos, garraY + dy));
+// ——— Funciones de juego ———
 
-  // Si chocó en un borde, cambiar de casilla y reposicionar
-  if (garraX === 0 && mapaMovimiento[selectedIndex].izquierda != null) {
-    selectedIndex = mapaMovimiento[selectedIndex].izquierda;
-    garraX = maxPos;
-  } else if (garraX === maxPos && mapaMovimiento[selectedIndex].derecha != null) {
-    selectedIndex = mapaMovimiento[selectedIndex].derecha;
-    garraX = 0;
-  }
-  if (garraY === 0 && mapaMovimiento[selectedIndex].arriba != null) {
-    selectedIndex = mapaMovimiento[selectedIndex].arriba;
-    garraY = maxPos;
-  } else if (garraY === maxPos && mapaMovimiento[selectedIndex].abajo != null) {
-    selectedIndex = mapaMovimiento[selectedIndex].abajo;
-    garraY = 0;
-  }
-
-  updateIndicator();
-  checkEntrega();
+// Recarga muñecos en áreas vacías
+function recargarAreas() {
+  areas.forEach((a, i) => {
+    if (i < 4 && a.state === STATES.EMPTY) {
+      a.state = STATES.HAS_DOLL;
+      a.doll = Math.floor(Math.random() * DOLL_COUNT) + 1;
+    }
+  });
+  updateEstado(ESTADOS.ESPERANDO_MONEDA);
+  renderAreas();
 }
 
-// ==========================================
-// 2) Cambio de celda “manual” (si aún lo necesitas)
-function moverCelda(dir) {
-  const dest = mapaMovimiento[selectedIndex][dir];
-  if (dest != null) {
-    selectedIndex = dest;
-    // Centrar garra en la nueva casilla:
-    garraX = AREA_SIZE/2 - STEP_SIZE/2;
-    garraY = AREA_SIZE/2 - STEP_SIZE/2;
-    updateIndicator();
-    checkEntrega();
+// Captura el muñeco si está alineado en el centro
+function intentarCaptura() {
+  const area   = areas[selectedIndex];
+  const centro = AREA_SIZE / 2 - STEP_SIZE / 2;
+  const dx     = Math.abs(garraX - centro);
+  const dy     = Math.abs(garraY - centro);
+
+  estadoMaquina = ESTADOS.ATRAPANDO_MUNECO;
+  updatePanel();
+
+  if (
+    area.state === STATES.HAS_DOLL &&
+    dx < CAPTURE_TH &&
+    dy < CAPTURE_TH &&
+    muñecoEnGarra === null
+  ) {
+    // ✅ Éxito: muñeco atrapado correctamente
+    muñecoEnGarra = area.doll;
+    celdaOriginal = selectedIndex;
+    area.state    = STATES.EMPTY;
+    area.doll     = null;
+    estadoMaquina = ESTADOS.LLEVANDO_MUNECO;
+  } else {
+    // ❌ Falló: muñeco mal alineado o no hay muñeco
+    intentosRestantes--;
+    estadoMaquina = intentosRestantes > 0
+      ? ESTADOS.MONEDA_INSERTADA
+      : ESTADOS.ESPERANDO_MONEDA;
   }
+
+  updatePanel();
+  renderAreas();
 }
 
+
+// Abre la garra y entrega o devuelve el muñeco
 function abrirGarra() {
-  if (estadoMaquina !== 'GRABBING') return;
+  estadoMaquina = ESTADOS.ABRIENDO_GARRA;
+  updatePanel();
 
-  const center = AREA_SIZE / 2 - STEP_SIZE / 2;
-  const dx = Math.abs(garraX - center);
-  const dy = Math.abs(garraY - center);
+  const centro = AREA_SIZE / 2 - STEP_SIZE / 2;
+  const dx = Math.abs(garraX - centro),
+    dy = Math.abs(garraY - centro);
 
   if (muñecoEnGarra !== null) {
     if (selectedIndex === 4 && dx < CAPTURE_TH && dy < CAPTURE_TH) {
-      document.getElementById('muñeco-entregado').src = `Capa_Datos/Assets/muneco${muñecoEnGarra}.jpg`;
+      // Entrega correcta
+      document.getElementById('muñeco-entregado').src =
+        `Capa_Datos/Assets/muneco${muñecoEnGarra}.jpg`;
+      ganados++;
       muñecoEnGarra = null;
       celdaOriginal = null;
-      ganados++;
+      estadoMaquina = ESTADOS.MUNECO_ENTREGADO;
+      updatePanel();
+
+      // Esperar 2s y limpiar entrega
+      setTimeout(() => {
+        document.getElementById('muñeco-entregado').src = '';
+        estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+        intentosRestantes = 0;
+        updatePanel();
+        renderAreas();
+      }, 2000);
+      return;
     } else {
-      // Falló la entrega, devolver muñeco
+      // Devolver muñeco y penalizar
       areas[celdaOriginal].state = STATES.HAS_DOLL;
       areas[celdaOriginal].doll = muñecoEnGarra;
       muñecoEnGarra = null;
       celdaOriginal = null;
+      intentosRestantes--;
+      estadoMaquina = intentosRestantes > 0
+        ? ESTADOS.MONEDA_INSERTADA
+        : ESTADOS.ESPERANDO_MONEDA;
     }
+  } else {
+    // Abrió sin muñeco
+    intentosRestantes--;
+    estadoMaquina = intentosRestantes > 0
+      ? ESTADOS.MONEDA_INSERTADA
+      : ESTADOS.ESPERANDO_MONEDA;
   }
-
-  // ❗ Aquí siempre se descuenta el intento, acierte o no
-  intentosRestantes--;
-  estadoMaquina = intentosRestantes > 0 ? 'COIN_INSERTED' : 'IDLE';
 
   updatePanel();
   renderAreas();
 }
 
-function recargarAreas() {
-  areas.forEach((area, i) => {
-    if (i < 4 && area.state === STATES.EMPTY) {
-      area.state = STATES.HAS_DOLL;
-      area.doll = Math.floor(Math.random() * DOLL_COUNT) + 1;
-    }
-  });
-  renderAreas();
-}
+// Movimiento entre casillas según mapaMovimiento
+function move(dx, dy) {
+  const maxPos = AREA_SIZE - STEP_SIZE;
+  const nextX = garraX + dx;
+  const nextY = garraY + dy;
 
-function intentarCaptura() {
-  const area = areas[selectedIndex];
-  const center = AREA_SIZE / 2 - STEP_SIZE / 2;
-  const dx = Math.abs(garraX - center);
-  const dy = Math.abs(garraY - center);
-
-  // Verifica si atrapa el muñeco
-  if (area.state === STATES.HAS_DOLL && dx < CAPTURE_TH && dy < CAPTURE_TH && muñecoEnGarra === null) {
-    muñecoEnGarra = area.doll;
-    celdaOriginal = selectedIndex;
-    area.state = STATES.EMPTY;
-    area.doll = null;
+  // Horizontal
+  if (nextX < 0 && mapaMovimiento[selectedIndex].izquierda != null) {
+    selectedIndex = mapaMovimiento[selectedIndex].izquierda;
+    garraX = maxPos;
+  } else if (nextX > maxPos && mapaMovimiento[selectedIndex].derecha != null) {
+    selectedIndex = mapaMovimiento[selectedIndex].derecha;
+    garraX = 0;
+  } else {
+    garraX = Math.max(0, Math.min(maxPos, nextX));
   }
 
-  // En cualquier caso, pasa al estado GRABBING
-  estadoMaquina = 'GRABBING';
+  // Vertical
+  if (nextY < 0 && mapaMovimiento[selectedIndex].arriba != null) {
+    selectedIndex = mapaMovimiento[selectedIndex].arriba;
+    garraY = maxPos;
+  } else if (nextY > maxPos && mapaMovimiento[selectedIndex].abajo != null) {
+    selectedIndex = mapaMovimiento[selectedIndex].abajo;
+    garraY = 0;
+  } else {
+    garraY = Math.max(0, Math.min(maxPos, nextY));
+  }
+
+  estadoMaquina = ESTADOS.MOVIENDO_GARRA;
+  updateIndicator();
+}
+
+// ——— Gestor de estado general ———
+function updateEstado(nuevoEstado) {
+  estadoMaquina = nuevoEstado;
   updatePanel();
-  renderAreas();
 }
 
-
-function checkEntrega() {
-  if (selectedIndex === 4 && muñecoEnGarra !== null) {
-    const center = AREA_SIZE / 2 - STEP_SIZE / 2;
-    const dx = Math.abs(garraX - center);
-    const dy = Math.abs(garraY - center);
-    if (dx < CAPTURE_TH && dy < CAPTURE_TH) {
-      document.getElementById('muñeco-entregado').src = `Capa_Datos/Assets/muneco${muñecoEnGarra}.jpg`;
-      muñecoEnGarra = null;
-      ganados++;
-      updatePanel();
-    }
-  }
-}
-
-// === EVENTOS ===
+// ——— Eventos ———
 document.getElementById('btn-insertar-coin').onclick = () => {
-  if (estadoMaquina === 'IDLE') {
+  if (estadoMaquina === ESTADOS.ESPERANDO_MONEDA || estadoMaquina === ESTADOS.INICIANDO) {
     intentosRestantes = 3;
-    estadoMaquina = 'COIN_INSERTED';
-    updatePanel();
+    updateEstado(ESTADOS.MONEDA_INSERTADA);
+    renderAreas();
   }
 };
-
 document.getElementById('btn-recargar').onclick = recargarAreas;
-
-document.getElementById('btn-izq').onclick    = () => move(-STEP_SIZE, 0);
-document.getElementById('btn-der').onclick    = () => move(STEP_SIZE, 0);
-document.getElementById('btn-arriba').onclick = () => move(0, -STEP_SIZE);
-document.getElementById('btn-abajo').onclick  = () => move(0, STEP_SIZE);
-
 document.getElementById('btn-bajar').onclick = () => {
-  if (estadoMaquina === 'COIN_INSERTED' && intentosRestantes > 0) {
-    estadoMaquina = 'GRABBING';
-    updatePanel();
-    // Espera breve para simular la bajada antes de abrir
-    setTimeout(() => {
+  if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA || intentosRestantes <= 0) return;
+
+  updateEstado(ESTADOS.ATRAPANDO_MUNECO);
+
+  setTimeout(() => {
+    // Si no hay muñeco en el área seleccionada:
+    if (areas[selectedIndex].state !== STATES.HAS_DOLL) {
+      intentosRestantes--;
+      estadoMaquina = intentosRestantes > 0
+        ? ESTADOS.MONEDA_INSERTADA
+        : ESTADOS.ESPERANDO_MONEDA;
+      updatePanel();
+      renderAreas();
+    } else {
+      // Si sí hay muñeco, entramos en la rutina normal
       intentarCaptura();
-    }, 400);
-  }
+    }
+  }, 300);
 };
 
-// === Botón “Abrir Garra” ===
-document.getElementById('btn-abrir').onclick = () => {
-  if (estadoMaquina === 'GRABBING') {
-    // Aquí sí procesamos captura/fallo y descontamos
-    abrirGarra();      // dentro de abrirGarra() haces intentosRestantes-- y renderizas
-  }
-};
+document.getElementById('btn-abrir').onclick = abrirGarra;
+
+document.getElementById('btn-izq').onclick = () => move(-STEP_SIZE, 0);
+document.getElementById('btn-der').onclick = () => move(STEP_SIZE, 0);
+document.getElementById('btn-arriba').onclick = () => move(0, -STEP_SIZE);
+document.getElementById('btn-abajo').onclick = () => move(0, STEP_SIZE);
 
 document.addEventListener('keydown', e => {
-  switch (e.key) {
-    case 'ArrowLeft':  move(-STEP_SIZE, 0); break;
-    case 'ArrowRight': move(STEP_SIZE, 0); break;
-    case 'ArrowUp':    move(0, -STEP_SIZE); break;
-    case 'ArrowDown':  move(0, STEP_SIZE); break;
-    case ' ':          document.getElementById('btn-bajar').click(); break;
-  }
+  if (e.key === 'ArrowLeft') move(-STEP_SIZE, 0);
+  if (e.key === 'ArrowRight') move(STEP_SIZE, 0);
+  if (e.key === 'ArrowUp') move(0, -STEP_SIZE);
+  if (e.key === 'ArrowDown') move(0, STEP_SIZE);
+  if (e.key === ' ') document.getElementById('btn-bajar').click();
 });
 
+// Inicialización
 window.onload = () => {
   recargarAreas();
-  updatePanel();
+  updateEstado(ESTADOS.ESPERANDO_MONEDA);
   renderAreas();
 };
