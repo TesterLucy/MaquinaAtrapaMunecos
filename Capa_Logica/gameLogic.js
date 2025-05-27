@@ -245,6 +245,7 @@ document.getElementById('btn-izq').onclick = () => move(-STEP_SIZE, 0);
 document.getElementById('btn-der').onclick = () => move(STEP_SIZE, 0);
 document.getElementById('btn-arriba').onclick = () => move(0, -STEP_SIZE);
 document.getElementById('btn-abajo').onclick = () => move(0, STEP_SIZE);
+document.getElementById('estado-maquina').textContent = estadoMaquina;
 
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') move(-STEP_SIZE, 0);
