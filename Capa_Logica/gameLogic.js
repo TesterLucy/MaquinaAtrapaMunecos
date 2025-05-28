@@ -92,8 +92,9 @@ function intentarCaptura() {
   const dx = Math.abs(garraX - centro);
   const dy = Math.abs(garraY - centro);
 
-  estadoMaquina = ESTADOS.ATRAPANDO_MUNECO;
+  estadoMaquina = ESTADOS.BAJANDO_GARRA;
   updatePanel();
+  estadoMaquina = ESTADOS.EVALUANDO_CAPTURA;
 
   if (
     area.state === STATES.HAS_DOLL &&
@@ -265,7 +266,7 @@ document.getElementById('btn-recargar').onclick = recargarAreas;
 document.getElementById('btn-bajar').onclick = () => {
   if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA || intentosRestantes <= 0) return;
 
-  updateEstado(ESTADOS.ATRAPANDO_MUNECO);
+  updateEstado(ESTADOS.BAJANDO_GARRA);
 
   setTimeout(() => {
     intentarCaptura();  // siempre llama a intentarCaptura()

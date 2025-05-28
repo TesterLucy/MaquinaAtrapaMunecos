@@ -18,13 +18,13 @@ const STATES = {
 const ESTADOS = {
   INICIANDO:             'Iniciando',
   ESPERANDO_MONEDA:      'Esperando moneda',
-  LISTO_PARA_JUGAR:      'Listo para jugar',         // <— opcional en lugar de MONEDA_INSERTADA
-  MOVIENDO_PINZA:        'Moviendo garra',           // <— en lugar de MOVIENDO_GARRA
-  BAJANDO_PINZA:         'Bajando garra',            // <— en lugar de ATRAPANDO_MUNECO
+  MONEDA_INSERTADA:      'Listo para jugar',         // <— opcional en lugar de MONEDA_INSERTADA
+  MOVIENDO_GARRA:        'Moviendo garra',           // <— en lugar de MOVIENDO_GARRA
+  BAJANDO_GARRA:         'Bajando garra',            // <— en lugar de ATRAPANDO_MUNECO
   EVALUANDO_CAPTURA:     'Evaluando captura',
   LLEVANDO_MUNECO:       'Llevando muñeco',
-  ABRIENDO_PINZA:        'Abriendo garra',           // <— en lugar de ABRIENDO_GARRA
-  ENTREGANDO_PREMIO:     'Entregando premio',
+  ABRIENDO_GARRA:        'Abriendo garra',           // <— en lugar de ABRIENDO_GARRA
+  MUNECO_ENTREGADO:     'Entregando premio',
   RECARGANDO_AREAS:      'Recargando áreas',         // <— en lugar de MUNECO_ENTREGADO
   FALLO:                 'Fallo'
 };
