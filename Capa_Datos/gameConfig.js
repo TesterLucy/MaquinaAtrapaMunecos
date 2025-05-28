@@ -5,7 +5,7 @@ const DOLL_COUNT = 12;
 // Tamaño de cada área y paso de la garra
 const AREA_SIZE  = 200;  // px
 const STEP_SIZE  = 20;   // px
-const CAPTURE_TH = 50;   // px umbral para capturar o entregar
+const CAPTURE_TH = 70;   // px umbral para capturar o entregar
 
 // Estados de cada área (modelo)
 const STATES = {

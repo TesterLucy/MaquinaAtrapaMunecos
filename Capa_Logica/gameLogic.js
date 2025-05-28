@@ -293,14 +293,17 @@ document.addEventListener('keydown', e => {
 
 // Inicialización
 window.onload = () => {
-  updateEstado(ESTADOS.INICIANDO)              // Mostrar interfaz básica
+  updateEstado(ESTADOS.INICIANDO);
 
   setTimeout(() => {
-    recargarAreas();               // Recarga muñecos
-    updateEstado(ESTADOS.ESPERANDO_MONEDA); // Cambia estado tras 2s
-    renderAreas();
+    // Solo cambiamos el estado si aún sigue en "Iniciando"
+    if (estadoMaquina === ESTADOS.INICIANDO) {
+      updateEstado(ESTADOS.ESPERANDO_MONEDA);
+      renderAreas();
+    }
   }, 5000);
 };
+
 
 
 
