@@ -74,6 +74,7 @@ function updateIndicator() {
 
 // Recarga muñecos en áreas vacías
 function recargarAreas() {
+  updateEstado(ESTADOS.RECARGANDO_AREAS);
   areas.forEach((a, i) => {
     if (i < 4 && a.state === STATES.EMPTY) {
       a.state = STATES.HAS_DOLL;
@@ -290,7 +291,14 @@ document.addEventListener('keydown', e => {
 
 // Inicialización
 window.onload = () => {
-  recargarAreas();
-  updateEstado(ESTADOS.ESPERANDO_MONEDA);
-  renderAreas();
+  updateEstado(ESTADOS.INICIANDO)              // Mostrar interfaz básica
+
+  setTimeout(() => {
+    recargarAreas();               // Recarga muñecos
+    updateEstado(ESTADOS.ESPERANDO_MONEDA); // Cambia estado tras 2s
+    renderAreas();
+  }, 5000);
 };
+
+
+
