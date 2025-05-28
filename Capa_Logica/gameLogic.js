@@ -107,11 +107,14 @@ function intentarCaptura() {
     area.doll     = null;
     estadoMaquina = ESTADOS.LLEVANDO_MUNECO;
   } else {
-    // ❌ Falló: muñeco mal alineado o no hay muñeco
+    // ❌ Falló por mala alineación o por estar vacío
     intentosRestantes--;
-    estadoMaquina = intentosRestantes > 0
-      ? ESTADOS.MONEDA_INSERTADA
-      : ESTADOS.ESPERANDO_MONEDA;
+    if (intentosRestantes > 0) {
+      estadoMaquina = ESTADOS.MONEDA_INSERTADA;
+    } else {
+      estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+      toggleControles(false);
+    }
   }
 
   updatePanel();
@@ -126,7 +129,7 @@ function abrirGarra() {
 
   const centro = AREA_SIZE / 2 - STEP_SIZE / 2;
   const dx = Math.abs(garraX - centro),
-    dy = Math.abs(garraY - centro);
+        dy = Math.abs(garraY - centro);
 
   if (muñecoEnGarra !== null) {
     if (selectedIndex === 4 && dx < CAPTURE_TH && dy < CAPTURE_TH) {
@@ -142,34 +145,45 @@ function abrirGarra() {
       // Esperar 2s y limpiar entrega
       setTimeout(() => {
         document.getElementById('muñeco-entregado').src = '';
-        estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
         intentosRestantes = 0;
+        estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+        ganados = 0;
+        toggleControles(false); // ⛔ Bloquear controles
         updatePanel();
         renderAreas();
       }, 2000);
       return;
     } else {
-      // Devolver muñeco y penalizar
+      // Falló la entrega, devolver muñeco
       areas[celdaOriginal].state = STATES.HAS_DOLL;
       areas[celdaOriginal].doll = muñecoEnGarra;
       muñecoEnGarra = null;
       celdaOriginal = null;
       intentosRestantes--;
-      estadoMaquina = intentosRestantes > 0
-        ? ESTADOS.MONEDA_INSERTADA
-        : ESTADOS.ESPERANDO_MONEDA;
+
+      if (intentosRestantes > 0) {
+        estadoMaquina = ESTADOS.MONEDA_INSERTADA;
+      } else {
+        estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+        toggleControles(false);
+      }
     }
   } else {
     // Abrió sin muñeco
     intentosRestantes--;
-    estadoMaquina = intentosRestantes > 0
-      ? ESTADOS.MONEDA_INSERTADA
-      : ESTADOS.ESPERANDO_MONEDA;
+
+    if (intentosRestantes > 0) {
+      estadoMaquina = ESTADOS.MONEDA_INSERTADA;
+    } else {
+      estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+      toggleControles(false);
+    }
   }
 
   updatePanel();
   renderAreas();
 }
+
 
 // Movimiento entre casillas según mapaMovimiento
 function move(dx, dy) {
@@ -209,14 +223,42 @@ function updateEstado(nuevoEstado) {
   updatePanel();
 }
 
+function toggleControles(habilitar) {
+  const botones = ['btn-izq', 'btn-der', 'btn-arriba', 'btn-abajo', 'btn-bajar', 'btn-abrir'];
+  botones.forEach(id => {
+    document.getElementById(id).disabled = !habilitar;
+  });
+}
+
+function reiniciarJuego() {
+  ganados = 0;
+  intentosRestantes = 0;
+  estadoMaquina = ESTADOS.ESPERANDO_MONEDA;
+  areas.forEach((a, i) => {
+    if (i < 4) a.state = STATES.EMPTY;
+  });
+  recargarAreas();
+  toggleControles(false); // Deshabilita controles
+  updatePanel();
+}
+
+// En abrirGarra(), después de decrementar intentos:
+if (intentosRestantes <= 0) {
+  setTimeout(() => {
+    reiniciarJuego();
+  }, 1000);
+}
 // ——— Eventos ———
 document.getElementById('btn-insertar-coin').onclick = () => {
   if (estadoMaquina === ESTADOS.ESPERANDO_MONEDA || estadoMaquina === ESTADOS.INICIANDO) {
     intentosRestantes = 3;
     updateEstado(ESTADOS.MONEDA_INSERTADA);
+    toggleControles(true); // ¡Habilita controles!
     renderAreas();
   }
 };
+
+
 document.getElementById('btn-recargar').onclick = recargarAreas;
 document.getElementById('btn-bajar').onclick = () => {
   if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA || intentosRestantes <= 0) return;
@@ -224,30 +266,21 @@ document.getElementById('btn-bajar').onclick = () => {
   updateEstado(ESTADOS.ATRAPANDO_MUNECO);
 
   setTimeout(() => {
-    // Si no hay muñeco en el área seleccionada:
-    if (areas[selectedIndex].state !== STATES.HAS_DOLL) {
-      intentosRestantes--;
-      estadoMaquina = intentosRestantes > 0
-        ? ESTADOS.MONEDA_INSERTADA
-        : ESTADOS.ESPERANDO_MONEDA;
-      updatePanel();
-      renderAreas();
-    } else {
-      // Si sí hay muñeco, entramos en la rutina normal
-      intentarCaptura();
-    }
+    intentarCaptura();  // siempre llama a intentarCaptura()
   }, 300);
 };
 
+
 document.getElementById('btn-abrir').onclick = abrirGarra;
 
-document.getElementById('btn-izq').onclick = () => move(-STEP_SIZE, 0);
 document.getElementById('btn-der').onclick = () => move(STEP_SIZE, 0);
+document.getElementById('btn-izq').onclick = () => move(-STEP_SIZE, 0);
 document.getElementById('btn-arriba').onclick = () => move(0, -STEP_SIZE);
 document.getElementById('btn-abajo').onclick = () => move(0, STEP_SIZE);
 document.getElementById('estado-maquina').textContent = estadoMaquina;
 
 document.addEventListener('keydown', e => {
+  if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA) return; 
   if (e.key === 'ArrowLeft') move(-STEP_SIZE, 0);
   if (e.key === 'ArrowRight') move(STEP_SIZE, 0);
   if (e.key === 'ArrowUp') move(0, -STEP_SIZE);
