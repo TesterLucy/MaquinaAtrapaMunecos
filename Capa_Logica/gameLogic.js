@@ -87,10 +87,10 @@ function recargarAreas() {
 
 // Captura el muñeco si está alineado en el centro
 function intentarCaptura() {
-  const area   = areas[selectedIndex];
+  const area = areas[selectedIndex];
   const centro = AREA_SIZE / 2 - STEP_SIZE / 2;
-  const dx     = Math.abs(garraX - centro);
-  const dy     = Math.abs(garraY - centro);
+  const dx = Math.abs(garraX - centro);
+  const dy = Math.abs(garraY - centro);
 
   estadoMaquina = ESTADOS.ATRAPANDO_MUNECO;
   updatePanel();
@@ -104,8 +104,8 @@ function intentarCaptura() {
     // ✅ Éxito: muñeco atrapado correctamente
     muñecoEnGarra = area.doll;
     celdaOriginal = selectedIndex;
-    area.state    = STATES.EMPTY;
-    area.doll     = null;
+    area.state = STATES.EMPTY;
+    area.doll = null;
     estadoMaquina = ESTADOS.LLEVANDO_MUNECO;
   } else {
     // ❌ Falló por mala alineación o por estar vacío
@@ -130,7 +130,7 @@ function abrirGarra() {
 
   const centro = AREA_SIZE / 2 - STEP_SIZE / 2;
   const dx = Math.abs(garraX - centro),
-        dy = Math.abs(garraY - centro);
+    dy = Math.abs(garraY - centro);
 
   if (muñecoEnGarra !== null) {
     if (selectedIndex === 4 && dx < CAPTURE_TH && dy < CAPTURE_TH) {
@@ -214,8 +214,9 @@ function move(dx, dy) {
     garraY = Math.max(0, Math.min(maxPos, nextY));
   }
 
-  estadoMaquina = ESTADOS.MOVIENDO_GARRA;
+  updateEstado(ESTADOS.MOVIENDO_GARRA); // ✅ esto actualiza estado visual
   updateIndicator();
+
 }
 
 // ——— Gestor de estado general ———
@@ -281,7 +282,7 @@ document.getElementById('btn-abajo').onclick = () => move(0, STEP_SIZE);
 document.getElementById('estado-maquina').textContent = estadoMaquina;
 
 document.addEventListener('keydown', e => {
-  if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA) return; 
+  if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA) return;
   if (e.key === 'ArrowLeft') move(-STEP_SIZE, 0);
   if (e.key === 'ArrowRight') move(STEP_SIZE, 0);
   if (e.key === 'ArrowUp') move(0, -STEP_SIZE);
