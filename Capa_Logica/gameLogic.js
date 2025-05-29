@@ -255,6 +255,8 @@ if (intentosRestantes <= 0) {
 document.getElementById('btn-insertar-coin').onclick = () => {
   if (estadoMaquina === ESTADOS.ESPERANDO_MONEDA || estadoMaquina === ESTADOS.INICIANDO) {
     intentosRestantes = 3;
+    muñecoEnGarra = null;
+    celdaOriginal = null; 
     updateEstado(ESTADOS.MONEDA_INSERTADA);
     toggleControles(true); // ¡Habilita controles!
     renderAreas();
@@ -264,14 +266,19 @@ document.getElementById('btn-insertar-coin').onclick = () => {
 
 document.getElementById('btn-recargar').onclick = recargarAreas;
 document.getElementById('btn-bajar').onclick = () => {
-  if (estadoMaquina !== ESTADOS.MONEDA_INSERTADA || intentosRestantes <= 0) return;
+  const jugable = [
+    ESTADOS.MONEDA_INSERTADA, // Listo para jugar
+    ESTADOS.MOVIENDO_GARRA     // Tras mover la garra
+  ];
+  if ((!jugable.includes(estadoMaquina)) || intentosRestantes <= 0) return;
 
   updateEstado(ESTADOS.BAJANDO_GARRA);
 
   setTimeout(() => {
-    intentarCaptura();  // siempre llama a intentarCaptura()
+    intentarCaptura();
   }, 300);
 };
+
 
 
 document.getElementById('btn-abrir').onclick = abrirGarra;
